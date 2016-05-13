@@ -1,0 +1,40 @@
+application: funcloak
+version: 2
+runtime: python27
+api_version: 1
+threadsafe: yes
+
+handlers:
+- url: /assets/css
+  static_dir: template/assets/css
+
+- url: /assets/font-awesome/css
+  static_dir: template/assets/font-awesome/css
+
+- url: /assets/fonts
+  static_dir: template/assets/fonts
+
+- url: /assets/img
+  static_dir: template/assets/img
+
+- url: /assets/js
+  static_dir: template/assets/js
+
+- url: /assets/less
+  static_dir: template/assets/less
+
+- url: /assets/sass
+  static_dir: template/assets/sass
+
+- url: /favicon\.ico
+  static_files: favicon.ico
+  upload: favicon\.ico
+
+- url: .*
+  script: main.app
+
+libraries:
+- name: webapp2
+  version: "2.5.2"
+- name: jinja2
+  version: "latest"

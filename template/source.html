@@ -1,0 +1,23 @@
+<html>
+	<body>
+		<div>
+			<a href="/signin"><button name="signin" value = "signin"></button></a>
+		</div>
+		<div>
+			{% if string %}
+				<b>{{string}}</b>
+				<b>{{coma}}</b>
+			{% endif %}
+		</div>
+		<br>
+		<div>
+			<form method="post">
+				<b>wanna create a community ??</b><br>
+				<label>
+					<input type = "text" name="community_name"/>
+				</label>
+				<input type = "submit" name = "submit">
+			</form>
+		</div>
+	</body>
+</html>

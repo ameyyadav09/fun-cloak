@@ -1,0 +1,26 @@
+<hmtl>
+	<head>
+		<title>input</title>
+	</head>
+	<body>
+		<center><a href="/" style="color:black;"><div><h1>Blog</h1></div></a></center>
+		<div>
+			<form method = "post">
+				<label>
+					<div>title</div>
+					<input type = "text" name = "title">
+				</label><br>
+				<label>
+					<div>content</div>
+					<textarea name="content"></textarea>
+				</label><br>
+				<input type = "submit">
+			</form>
+		</div>
+		<div name = "error">
+			{% if error %}
+				<h4>{{error}}</h4>
+			{% endif %}
+		</div>
+	</body>
+</hmtl>

@@ -1,0 +1,16 @@
+<html>
+	<body>
+		{% if mem_list %}
+			{% for mem in mem_list %}
+				<hr>
+				<div style="width:200px;height:20px;border: 1px solid #000000;overflow: hidden;white-space: nowrap;text-overflow: ellipsis;">
+					<b>{{mem.member_name}}</b>
+				</div>
+			{% endfor %}
+		{% else %}
+			<h6>Your Community is Empty</h6>
+			<p>Add your friends and Family</p>
+			<a href="/sendrequest"><button name="sendRequest">send Request</button></a>
+		{% endif %}
+	</body>
+</html>

@@ -1,0 +1,30 @@
+<html>
+	<head>
+	</head>
+	<body>
+		<div><a href="/logout">Click here to logout</a></div>
+		<div>
+			<form method = "post">
+				<label>
+					<textarea name = "content" placeholder = "what's on ua mind"></textarea><br><br>
+					<input type = "submit" >
+				</label>
+			</form>
+		</div>
+		<a href="/adminPage"><button name="adminPage">admin</button></a>
+			
+		<div>
+			{% if posts%}
+				{% for post in posts %}
+					<hr>
+					<div style="width:200px;height:20px;border: 1px solid #000000;overflow: hidden;white-space: nowrap;text-overflow: ellipsis;">
+						<b>{{post.post_content}}</b>
+					</div>
+				{% endfor %}
+			{% else %}
+				<h6>No posts</h6>
+				<em>Share what you have..... yu're welcome</em>
+			{% endif %}
+		</div>
+	</body>
+</html>
