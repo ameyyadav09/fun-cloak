@@ -1,12 +1,11 @@
 <html>
 	<body>
-		<div>
-			<a href="/signin"><button name="signin" value = "signin"></button></a>
-		</div>
+		<p>Have an acc, then sign in</p>
+		<a href="/signin"><button name="signin">Sign</button></a>
+		<br><br>
 		<div>
 			{% if string %}
 				<b>{{string}}</b>
-				<b>{{coma}}</b>
 			{% endif %}
 		</div>
 		<br>
@@ -14,7 +13,7 @@
 			<form method="post">
 				<b>wanna create a community ??</b><br>
 				<label>
-					<input type = "text" name="community_name"/>
+					<input type = "text" name="community_name" required="requred"/>
 				</label>
 				<input type = "submit" name = "submit">
 			</form>

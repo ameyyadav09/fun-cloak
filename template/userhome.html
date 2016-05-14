@@ -2,23 +2,28 @@
 	<head>
 	</head>
 	<body>
-		<div><a href="/logout">Click here to logout</a></div>
 		<div>
-			<form method = "post">
-				<label>
-					<textarea name = "content" placeholder = "what's on ua mind"></textarea><br><br>
-					<input type = "submit" >
-				</label>
-			</form>
+			<div style="allign:right;width:600px"><a href="/logout">Click here to logout</a></div>
+			<div>
+				<form method = "post">
+					<label>
+						<textarea name = "content" placeholder = "what's on ua mind" required="required"></textarea><br><br>
+						<input type = "submit" >
+					</label>
+				</form>
+			</div>
 		</div>
-		<a href="/adminPage"><button name="adminPage">admin</button></a>
+		{% if authority %}
+			<a href="/adminPage"><button name="adminPage">admin</button></a>
+		{% endif %}
 			
 		<div>
 			{% if posts%}
 				{% for post in posts %}
 					<hr>
-					<div style="width:200px;height:20px;border: 1px solid #000000;overflow: hidden;white-space: nowrap;text-overflow: ellipsis;">
-						<b>{{post.post_content}}</b>
+					<div style="font:10">
+						<sup><p style="font-size:20">{{post.post_content}}</p></sup>
+						<sub><p>_ _ _ By Anonymous</p></sub>
 					</div>
 				{% endfor %}
 			{% else %}

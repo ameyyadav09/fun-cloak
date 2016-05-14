@@ -31,6 +31,7 @@ from webapp2_extras import sessions
 
 from webapp2_extras.auth import InvalidAuthIdError
 from webapp2_extras.auth import InvalidPasswordError
+from google.appengine.ext.webapp.mail_handlers import BounceNotificationHandler
 
 templates_dir = os.path.join(os.path.dirname(__file__),'template')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(templates_dir), autoescape = True)
@@ -49,6 +50,12 @@ def create_new_user_confirmation(user_address):
 	addr = 'https://{}/user/confirm?code={}'.format(socket.getfqdn(socket.gethostname()), random_id)
 	return random_id+","+addr
 
+class LogBounceHandler(BounceNotificationHandler):
+    def receive(self, bounce_message):
+        logging.info('Received bounce post ... [%s]******', self.request)
+        logging.info('Bounce original: %s +++++++', bounce_message.original)
+        logging.info('Bounce notification: %s >>>>>>>', bounce_message.notification)
+
 def user_required(func):
 	"""
 	Decorator that checks if there's a user associated with the current session.
@@ -60,6 +67,17 @@ def user_required(func):
 			return func(self)
 		else:
 			self.redirect('/signin', abort=True)
+	return check_login
+
+def ifLogged(func):
+	# this decorator checks if user is already logged in and redirects them to home page
+
+	def check_login(self):
+		auth = self.session.get("name")
+		if auth:
+			self.redirect('/userhome',abort=True)
+		else:
+			return func(self)
 	return check_login
 
 config = {}
@@ -102,6 +120,7 @@ class IndexHandler(Pageview):
 			self.redirect("/com_register?string="+string+"&c_name="+c_name)
 
 class Com_registerHandler(Pageview):
+	@ifLogged
 	def get(self):
 		string = self.request.get("string")
 		c_name = self.request.get("c_name")
@@ -110,6 +129,7 @@ class Com_registerHandler(Pageview):
 		else:
 			self.render("community_register.html")
 
+	@ifLogged
 	def post(self):
 		c_name = self.request.get("community_name")
 		member_name = self.request.get("name")
@@ -143,8 +163,10 @@ class MainHandler(Pageview):
 		p.filter("community_id =",com_obj)
 		
 		posts = p.fetch(limit = 10)
+
+		authority = self.session.get("authority")
 		
-		self.render("userhome.html", posts = posts, baseURL = "/userhome")
+		self.render("userhome.html", posts = posts, authority = authority)
 
 	@user_required
 	def post(self):
@@ -162,9 +184,12 @@ class MainHandler(Pageview):
 		self.redirect("/userhome")
 
 class SigninHandler(Pageview):
+	@ifLogged
 	def get(self):
-		self.render("signin.html")
+		msg = self.request.get("msg")
+		self.render("signin.html", msg = msg)
 
+	@ifLogged
 	def post(self):
 		c_name = self.request.get("community_name")
 		u_name = self.request.get("username")
@@ -177,51 +202,110 @@ class SigninHandler(Pageview):
 				if mem_obj.passcode == passcode:
 					self.session["name"] = u_name
 					self.session["community"] = c_name
-					self.redirect("/userhome")
+					if u_name == com_obj.admin_name:
+						self.session["authority"] = 1
+						self.redirect("/userhome")
+					else:
+						self.session["authority"] = 0
+						self.redirect("/userhome")
 				else:
-					self.render("signin.html",string = "Password Error")
+					self.render("signin.html",msg = "Password Error")
 			else:
-				self.render("signin.html",string = "Username Error")
+				self.render("signin.html",msg = "Username Error")
 		else:
-			self.render("signin.html",string = "community name Error")
+			self.render("signin.html",msg = "community name Error")
 
 class LogoutHandler(Pageview):
+	@user_required
 	def get(self):
-		logging.info("+++++++++++++++++++++++++++++++++++++++++++")
-		if self.request.get('vara'):
-			logging.info("+++++++++++++++++++++++++++++++++++++++++++")
-			if self.session:
-				return 1
 		self.session.clear()
 		self.redirect("/signin")
 
 class AdminHandler(Pageview):
+	@user_required
 	def get(self):
-		c_name = self.session.get('name')
+		c_name = self.session.get("community")
+
 		com_obj = db.GqlQuery("SELECT * FROM Community WHERE community_name=:1",c_name).get()
 
-		m = db.GqlQuery("SELECT * FROM Members WHERE community_id=:1",com_obj)
-		mem_list = m.fetch(limit = 500)
+		m = Members.all()
+
+		m.filter("community_id =",com_obj)
+
+		mem_list = m.fetch(limit = 10)
+
 		self.render("adminPage.html", mem_list = mem_list)
 
 class RequestSendingHandler(Pageview):
+	@user_required
 	def get(self):
 		self.render("sendRequest.html")
 
+	@user_required
 	def post(self):
-		u_name = self.request.get('email')
+		u_name = self.request.get("email")
+		c_name = str(self.session.get("community"))
 		addr = create_new_user_confirmation(u_name).split(',')
 		req_obj = Request(member_name = u_name, secret_code = addr[0])
-		message = mail.EmailMessage()
-		message.sender = "ameykumar.tkr@gmail.com"
-		message.to = u_name
-		message.subject = "Request to join the community"
-		message.body = """<p>Hello, This is a request to join our new Community Blog.</p>
-						<p>Please click on this link to join</p>
-						<b>{}</b>""".format({addr[1]})
-		logging.info(message.body)
-		message.send()
-		self.render("sendRequest.html")
+		req_obj.put()
+		addr[1] = addr[1]+"&email="+u_name+"&c_name="+c_name
+		try:			
+			mail.send_mail(sender= "ameykumar.tkr@gmail.com",
+							to= str(u_name),
+							subject="Your account has been approved",
+							body="""Dear {}:
+							Your example.com account has been approved.  You can now visit
+							{} and sign in fun-cloak to
+							access new features.
+							""".format(u_name, addr[1]))
+		except Exception:
+			logging.info("Sending failed to %s"%(u_name))			
+		self.redirect("/sendrequest")
+
+class ConformationHandler(Pageview):
+	def get(self):
+		secret_code = str(self.request.get("code"))
+		user_mail = str(self.request.get("email"))
+		c_name = str(self.request.get("c_name"))
+		r = Request.all()
+		req_obj = None
+		for each in r:
+			if each.member_name == user_mail and each.secret_code == secret_code:
+				req_obj = each
+		if req_obj is not None:
+			req_obj.delete()
+			msg = "Welcome, You are a fun-cloaker now jz set a password to your account \n our Community is %s"%(c_name)
+			self.render("register.html", msg = msg, email = user_mail, c_name = c_name)
+		else:
+			self.redirect("/signin?msg=Unauthorized access or link is not valid anymore")
+
+	def post(self):
+		user_mail = str(self.request.get("email"))
+		fullname = str(self.request.get("fullname"))
+		c_name = str(self.request.get("c_name"))
+		password1 = str(self.request.get("password1"))
+		password2 = str(self.request.get("password2"))
+		if password1 == password2:
+			com_obj = db.GqlQuery("SELECT * FROM Community WHERE community_name=:1",c_name).get()
+			mem_obj = db.GqlQuery("SELECT * FROM Members WHERE community_id=:1 and email=:2",com_obj,user_mail).get()
+			if com_obj:
+				if not mem_obj:
+					mem_obj = Members(community_id = com_obj, member_name = fullname, email = user_mail, passcode = password1, authority = 0)
+					mem_obj.put()
+					self.session["name"] = user_mail
+					self.session["community"] = c_name
+					self.session["authority"] = 0
+					self.redirect("/userhome")
+				else:
+					msg = "your are already a member please login or click on forgot password"
+					self.redirect("/signin?msg="+msg)
+			else:
+				msg = "community does not exist"
+				self.redirect("/signin?msg="+msg)
+		else:
+			msg = "passwords donot match Enter Again"
+			self.render("register.html", msg = msg, email = user_mail, c_name = c_name)
+
 
 app = webapp2.WSGIApplication([
 	webapp2.Route('/', IndexHandler),
@@ -232,4 +316,6 @@ app = webapp2.WSGIApplication([
 	webapp2.Route('/logoutcheck',LogoutHandler),
 	webapp2.Route('/adminPage',AdminHandler),
 	webapp2.Route('/sendrequest',RequestSendingHandler),
+	webapp2.Route('/_ah/bounce',LogBounceHandler.mapping()),
+	webapp2.Route('/user/confirm', ConformationHandler),
 ], config = config, debug=True)
