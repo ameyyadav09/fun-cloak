@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
-    <title>Fun-Cloak Sign In</title>
+    <title>Fun-Cloak Forgot Password</title>
     <link href="assets/css/bootstrap.min.css" rel="stylesheet">
     <link href="assets/css/font-awesome.min.css" rel="stylesheet">
     <link href="assets/css/prettyPhoto.css" rel="stylesheet">
@@ -30,7 +30,7 @@
             </div>
             <div class="collapse navbar-collapse">
                 <ul class="nav navbar-nav navbar-right">
-                    
+                    <li><a href="/signin">Signin</a></li>
                 </ul>
             </div>
         </div>
@@ -40,44 +40,29 @@
          <div class="container">
             <div class="row">
                 <div class="col-sm-6">
-                    <h1>Sign In</h1>
+                    <h1>Forgot Password</h1>
                     <p>{{msg}}</p>
-                </div>
-                <div class="col-sm-6">
-                    <ul class="breadcrumb pull-right">
-                        <li><a href="/forgot">Forgot Password?</a></li>
-                    </ul>
                 </div>
             </div>
         </div>
-    </section><!--/#title-->     
+    </section>
 
     <section id="registration" class="container">
        <form class="center" role="form" method = "post">
             <fieldset class="registration-form">
                 <div class="form-group">
-                    <input type = "text" name = "community_name" placeholder = "community_name" class="form-control" pattern="[a-z0-9-]+" required="required">
+                    <input type = "text" name = "c_name" placeholder = "community_name" class="form-control" pattern="[a-z0-9-]+" required="required">
                 </div>
                 <label style="font-weight:100;">lowercase letters,  numbers and - are allowed</label>
                 <div class="form-group">
                     <input type = "text" name = "username" placeholder = "email" class="form-control" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,3}$" required="required">
                 </div>
                 <div class="form-group">
-                    <input type = "password" name = "password" placeholder = "password" class="form-control" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" required="required">
-                </div>
-                <label style="font-weight:100;">atleast 8 charcters with 1 Uppercase and 1 LowerCase</label>
-                <div class="form-group">
-                    <button type="submit" class="btn btn-success btn-md btn-block">Sign In</button>
+                    <button type="submit" class="btn btn-success btn-md btn-block">Submit</button>
                 </div>
             </fieldset>
         </form>
     </section><!--/#registration-->
-
-    <section id="bottom" class="wet-asphalt">
-        <div class="container">
-            
-        </div>
-    </section><!--/#bottom-->
 
     <footer id="footer" class="midnight-blue">
         <div class="container">

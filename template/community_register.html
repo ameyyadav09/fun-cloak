@@ -1,30 +1,3 @@
-<html>
-	<body>
-		<br>
-		<div>
-			<form method="post">
-				<b>{{string}}</b><br>
-				<label>
-					<input type = "text" name="community_name" value = "{{c_name}}"/>
-				</label><br><br>
-				<label>
-					<input type = "text" name = "name" placeholder = "name">
-				</label><br><br>
-				<label>
-					<input type = "text" name = "email" placeholder = "email">
-				</label><br><br>
-				<label>
-					<input type = "password" name = "password" placeholder = "password">
-				</label><br><br>
-				<input type = "submit" name = "submit">
-			</form>
-		</div>
-		<br><br>
-		<br><br>
-		<a href="/signin"><button name="signin">Sign</button></a>
-	</body>
-</html>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -32,37 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
-    <title>Registration | Flat Theme</title>
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <link href="css/font-awesome.min.css" rel="stylesheet">
-    <link href="css/prettyPhoto.css" rel="stylesheet">
-    <link href="css/animate.css" rel="stylesheet">
-    <link href="css/main.css" rel="stylesheet">
+    <title>Fun-Cloak Create Community</title>
+    <link href="assets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="assets/css/font-awesome.min.css" rel="stylesheet">
+    <link href="assets/css/prettyPhoto.css" rel="stylesheet">
+    <link href="assets/css/animate.css" rel="stylesheet">
+    <link href="assets/css/main.css" rel="stylesheet">
     <!--[if lt IE 9]>
     <script src="js/html5shiv.js"></script>
     <script src="js/respond.min.js"></script>
     <![endif]-->       
     <link rel="shortcut icon" href="images/ico/favicon.ico">
-    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="images/ico/apple-touch-icon-144-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="images/ico/apple-touch-icon-114-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="images/ico/apple-touch-icon-72-precomposed.png">
-    <link rel="apple-touch-icon-precomposed" href="images/ico/apple-touch-icon-57-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="assets/images/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="assets/images/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="assets/images/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="assets/images/ico/apple-touch-icon-57-precomposed.png">
 </head><!--/head-->
 <body>
     <header class="navbar navbar-inverse navbar-fixed-top wet-asphalt" role="banner">
         <div class="container">
             <div class="navbar-header">
-                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                </button>
-                <a href="/"><button class="btn btn-success btn-md btn-block"></button>Fun-Cloak</a>
+                <a class="navbar-brand" href="/">Fun-Cloak</a>
             </div>
             <div class="collapse navbar-collapse">
                 <ul class="nav navbar-nav navbar-right">
-                    
+                    <li><a href="/signin">Signin</a></li>
                 </ul>
             </div>
         </div>
@@ -72,47 +39,42 @@
         <div class="container">
             <div class="row">
                 <div class="col-sm-6">
-                    <h1>Registration</h1>
+                    <h1>Create Your Community</h1>
                     <p style="font-size:20">{{string}}</p>
-                    <b>{{string}}</b><br>
                 </div>
             </div>
         </div>
     </section><!--/#title-->     
 
     <section id="registration" class="container">
-        <form class="center" role="form">
+        <form class="center" role="form" method="post">
             <fieldset class="registration-form">
-            	<form method="post">
-	            	<div class="form-group">
-	                    <input type = "text" name="community_name" value = "{{c_name}}"/>
-	                </div>
-	                <div class="form-group">
-	                    <input type = "text" name = "name" placeholder = "name">
-	                </div>
-	                <div class="form-group">
-	                    <input type = "text" name = "email" placeholder = "email">
-	                </div>
-	                <div class="form-group">
-	                    <input type = "password" name = "password" placeholder = "password">
-	                </div>
-	                <div class="form-group">
-	                    <input type = "submit" name = "submit">
-	                </div>
-	            </form>
+            	<div class="form-group">
+                    <input type = "text" name="community_name" value = "{{c_name}}" class="form-control" pattern="[a-z0-9-]+"/>
+                </div>
+                <div class="form-group">
+                    <input type = "text" name = "name" placeholder = "name" class="form-control" pattern="[\w]+" required="required">
+                </div>
+                <label style="font-weight:100;">alphabets, numbers and _ are allowed</label>
+                <div class="form-group">
+                    <input type = "text" name = "email" placeholder = "email" class="form-control" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,3}$" required="required">
+                </div>
+                <div class="form-group">
+                    <input type = "password" name = "password" placeholder = "password" class="form-control" pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" required="required">
+                </div>
+                <label style="font-weight:lighter;">atleast 8 charcters with 1 Uppercase and 1 LowerCase</label>
+                <div class="form-group">
+                    <button class="btn btn-success btn-md btn-block">Submit</button>
+                </div>
             </fieldset>
         </form>
     </section><!--/#registration-->
 
-    <section id="bottom" class="wet-asphalt">
-        <div class="container">
-            
-        </div>
-    </section><!--/#bottom-->
 
     <footer id="footer" class="midnight-blue">
         <div class="container">
             <div class="row">
+                <div class="col-sm-6">&copy;<a href="/userhome" title="">Dev</a></div>
                 <div class="col-sm-6">
                     <ul class="pull-right">
                         <li><a href="#">Home</a></li>
@@ -126,9 +88,9 @@
         </div>
     </footer><!--/#footer-->
 
-    <script src="js/jquery.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-    <script src="js/jquery.prettyPhoto.js"></script>
-    <script src="js/main.js"></script>
+    <script src="assets/js/jquery.js"></script>
+    <script src="assets/js/bootstrap.min.js"></script>
+    <script src="assets/js/jquery.prettyPhoto.js"></script>
+    <script src="assets/js/main.js"></script>
 </body>
 </html>

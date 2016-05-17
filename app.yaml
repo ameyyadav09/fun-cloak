@@ -21,8 +21,8 @@ handlers:
 - url: /assets/fonts
   static_dir: template/assets/fonts
 
-- url: /assets/img
-  static_dir: template/assets/img
+- url: /assets/images
+  static_dir: template/assets/images
 
 - url: /assets/js
   static_dir: template/assets/js

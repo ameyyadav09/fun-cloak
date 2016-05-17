@@ -21,6 +21,7 @@ class Posts(db.Model):
 	post_content = db.TextProperty(required = True)
 	likes = db.IntegerProperty(default = 0)
 	dislikes = db.IntegerProperty(default = 0)
+	created = db.DateTimeProperty(auto_now_add = True)
 
 	def render(self):
 		self._render_text = self.post_content.replace('\n','<br>')

@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 #
 # Copyright 2007 Google Inc.
@@ -43,10 +44,14 @@ def uniqueCommunity(community):
 	else:
 		return False
 
-def create_new_user_confirmation(user_address):
+def generate_random():
 	id_chars = string.ascii_letters + string.digits
 	rand = random.SystemRandom()
 	random_id = ''.join([rand.choice(id_chars) for i in range(16)])
+	return random_id
+
+def create_new_user_confirmation(user_address):
+	random_id = generate_random()
 	addr = 'https://{}/user/confirm?code={}'.format(socket.getfqdn(socket.gethostname()), random_id)
 	return random_id+","+addr
 
@@ -69,7 +74,7 @@ def user_required(func):
 			self.redirect('/signin', abort=True)
 	return check_login
 
-def ifLogged(func):
+def ifNotLogged(func):
 	# this decorator checks if user is already logged in and redirects them to home page
 
 	def check_login(self):
@@ -107,7 +112,8 @@ class Pageview(webapp2.RequestHandler):
 
 class IndexHandler(Pageview):
     def get(self):
-        self.render("source.html")
+    	c_name = self.session.get("community")
+        self.render("source.html", cname = c_name)
 
     def post(self):
 		c_name = self.request.get("community_name")
@@ -120,7 +126,7 @@ class IndexHandler(Pageview):
 			self.redirect("/com_register?string="+string+"&c_name="+c_name)
 
 class Com_registerHandler(Pageview):
-	@ifLogged
+	@ifNotLogged
 	def get(self):
 		string = self.request.get("string")
 		c_name = self.request.get("c_name")
@@ -129,7 +135,7 @@ class Com_registerHandler(Pageview):
 		else:
 			self.render("community_register.html")
 
-	@ifLogged
+	@ifNotLogged
 	def post(self):
 		c_name = self.request.get("community_name")
 		member_name = self.request.get("name")
@@ -149,7 +155,7 @@ class Com_registerHandler(Pageview):
 			self.render("signin.html")
 		else:
 			string = 'community is unavailable, choose a different name'
-			self.render("source.html",string = string)
+			self.render("source.html",string = string, cname = None)
 
 class MainHandler(Pageview):
 	@user_required
@@ -161,12 +167,17 @@ class MainHandler(Pageview):
 		p = Posts.all()
 		
 		p.filter("community_id =",com_obj)
+
+		p.order("-created")
 		
 		posts = p.fetch(limit = 10)
 
 		authority = self.session.get("authority")
-		
-		self.render("userhome.html", posts = posts, authority = authority)
+
+		name = self.session.get("name")
+		nickname = self.session.get("nickname").split(' ')[0]
+
+		self.render("userhome.html", posts = posts, authority = authority, User = name, nickname= nickname)
 
 	@user_required
 	def post(self):
@@ -184,12 +195,12 @@ class MainHandler(Pageview):
 		self.redirect("/userhome")
 
 class SigninHandler(Pageview):
-	@ifLogged
+	@ifNotLogged
 	def get(self):
 		msg = self.request.get("msg")
 		self.render("signin.html", msg = msg)
 
-	@ifLogged
+	@ifNotLogged
 	def post(self):
 		c_name = self.request.get("community_name")
 		u_name = self.request.get("username")
@@ -201,6 +212,7 @@ class SigninHandler(Pageview):
 			if mem_obj:
 				if mem_obj.passcode == passcode:
 					self.session["name"] = u_name
+					self.session["nickname"] = mem_obj.member_name
 					self.session["community"] = c_name
 					if u_name == com_obj.admin_name:
 						self.session["authority"] = 1
@@ -234,12 +246,17 @@ class AdminHandler(Pageview):
 
 		mem_list = m.fetch(limit = 10)
 
-		self.render("adminPage.html", mem_list = mem_list)
+		name = self.session.get("name")
+		nickname = self.session.get("nickname").split(' ')[0]
+
+		self.render("adminPage.html", mem_list = mem_list, User = name, nickname = nickname)
 
 class RequestSendingHandler(Pageview):
 	@user_required
 	def get(self):
-		self.render("sendRequest.html")
+		name = self.session.get("name")
+		nickname = self.session.get("nickname").split(' ')[0]
+		self.render("sendRequest.html", User = name, nickname = nickname)
 
 	@user_required
 	def post(self):
@@ -259,7 +276,7 @@ class RequestSendingHandler(Pageview):
 							access new features.
 							""".format(u_name, addr[1]))
 		except Exception:
-			logging.info("Sending failed to %s"%(u_name))			
+			logging.info("Sending failed to %s"%(u_name))
 		self.redirect("/sendrequest")
 
 class ConformationHandler(Pageview):
@@ -293,6 +310,7 @@ class ConformationHandler(Pageview):
 					mem_obj = Members(community_id = com_obj, member_name = fullname, email = user_mail, passcode = password1, authority = 0)
 					mem_obj.put()
 					self.session["name"] = user_mail
+					self.session["nickname"] = mem_obj.member_name
 					self.session["community"] = c_name
 					self.session["authority"] = 0
 					self.redirect("/userhome")
@@ -306,6 +324,80 @@ class ConformationHandler(Pageview):
 			msg = "passwords donot match Enter Again"
 			self.render("register.html", msg = msg, email = user_mail, c_name = c_name)
 
+class ForgotHandler(Pageview):
+	@ifNotLogged
+	def get(self):
+		msg = self.request.get("msg")
+		self.render("forgot.html", msg = msg)
+
+	@ifNotLogged
+	def post(self):
+		c_name = self.request.get("c_name")
+		email = self.request.get("username")
+		msg = ""
+		com_obj = db.GqlQuery("SELECT * FROM Community WHERE community_name=:1",c_name).get()
+		if com_obj:
+			mem_obj = db.GqlQuery("SELECT * FROM Members WHERE community_id=:1 and email=:2",com_obj,email).get()
+			if mem_obj:
+				random_id = generate_random()
+				req_obj = Request(member_name = email, secret_code = random_id)
+				req_obj.put()
+				addr = 'https://{}/user/forgot?code={}'.format(socket.getfqdn(socket.gethostname()), random_id)
+				addr = addr+"&email="+email+"&c_name="+c_name
+				try:			
+					mail.send_mail(sender= "ameykumar.tkr@gmail.com",
+									to= str(email),
+									subject="Forgot password, fun-cloak.appspot.com",
+									body="""Dear {}:
+									Your example.com {} account password can be modified at this link {} """.format(email, c_name, addr))
+				except Exception:
+					logging.info("Sending failed to %s"%(email))
+				msg = "conformation has been sent to your mail"
+				self.redirect("/signin?msg="+msg)
+			else:
+				msg = "enter correct mail id related to your %s account"%(c_name)
+		else:
+			msg = "community name error"
+		self.redirect("/forgot?msg="+msg)
+
+class PasswordHandler(Pageview):
+	def get(self):
+		secret_code = str(self.request.get("code"))
+		user_mail = str(self.request.get("email"))
+		c_name = str(self.request.get("c_name"))
+		r = Request.all()
+		req_obj = None
+		for each in r:
+			if each.member_name == user_mail and each.secret_code == secret_code:
+				req_obj = each
+		if req_obj is not None:
+			req_obj.delete()
+			msg = "set your account password for Community %s, here"%(c_name)
+			self.render("setpassword.html", msg = msg, email = user_mail, c_name = c_name)
+		else:
+			self.redirect("/signin?msg=Unauthorized access or the link is invalid")
+
+	def post(self):
+		email = str(self.request.get("email"))
+		c_name = str(self.request.get("c_name"))
+		password1 = str(self.request.get("password1"))
+		password2 = str(self.request.get("password2"))
+		if password1 == password2:
+			com_obj = db.GqlQuery("SELECT * FROM Community WHERE community_name=:1",c_name).get()
+			if com_obj:
+				mem_obj = db.GqlQuery("SELECT * FROM Members WHERE community_id=:1 and email=:2",com_obj,email).get()
+				if mem_obj:
+					mem_obj.passcode = password1
+					mem_obj.put()
+					msg = "Password reset has been successfull"
+					self.redirect("/signin?msg="+msg)
+				else:
+					msg = "Something has gone wrong, try again"
+			else:
+				msg = "Something has gone wrong, try again"
+		else:
+			msg = "Passwords didnot match"
+		self.redirect("/forgot?msg="+msg)
 
 app = webapp2.WSGIApplication([
 	webapp2.Route('/', IndexHandler),
@@ -318,4 +410,6 @@ app = webapp2.WSGIApplication([
 	webapp2.Route('/sendrequest',RequestSendingHandler),
 	webapp2.Route('/_ah/bounce',LogBounceHandler.mapping()),
 	webapp2.Route('/user/confirm', ConformationHandler),
+	webapp2.Route('/user/forgot', PasswordHandler),
+	webapp2.Route('/forgot', ForgotHandler),
 ], config = config, debug=True)
